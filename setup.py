@@ -2,23 +2,31 @@
 # -*- coding: utf-8 -*-
 import sys
 import os.path
-from setuptools import (
-    setup,
-    find_packages,
-)
-
+from setuptools import setup
+from setuptools.command.install import install
 
 about = {}
 with open(os.path.join("chillmax", "version.py")) as f:
     exec(f.read(), about)
 
+INSTALL_REQUIRES = [
+    "numpy>=1.16.0",
+    "scipy>=1.1.0",
+    "requests~=2.21",
+    "packaging",
+]
 
-needs_pytest = {"pytest", "test", "ptr"}.intersection(sys.argv)
-pytest_runner = ["pytest-runner"] if needs_pytest else []
+extras_require = {
+    "test": [
+        "pytest",
+        "papermill~=1.0",
+    ],
+    "develop": ["flake8"],
+}
+extras_require["complete"] = sorted(set(sum(extras_require.values(), [])))
 
 setup(name="chillmax",
       version=about["__version__"],
-      packages=find_packages(),
       scripts=[],
       include_package_data=True,
       description="",
@@ -30,10 +38,8 @@ setup(name="chillmax",
       download_url="",
       license="BSD 3-clause",
       test_suite="tests",
-      install_requires=[
-          "numpy>=1.14",
-      ],
-      setup_requires=["flake8"] + pytest_runner,
+      install_requires=INSTALL_REQUIRES,
+      extras_require=extras_require,
       classifiers=[
           "Development Status :: 4 - Beta",
           "Intended Audience :: Science/Research",
