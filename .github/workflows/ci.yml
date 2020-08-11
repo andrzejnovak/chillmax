@@ -44,4 +44,4 @@ jobs:
         python -m pip list
     - name: Test with pytest
       run: |
-         python -m pytest -r sx test.py
+         python -m pytest -r sx 
