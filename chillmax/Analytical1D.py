@@ -59,8 +59,8 @@ def transform_surface(freq,
 
         # Propagation of the internal new axion field inside and
         # through the surface
-        ax_i = (ax_i * g * r_internal
-                * (1 - r_surface) / (1 + g * r_internal * r_surface))
+        ax_i = (ax_i * g * r_internal *
+                (1 - r_surface) / (1 + g * r_internal * r_surface))
 
         # Propagation of the present axion_out through the surface
         axion_out *= g * (1 - r_surface) / (1 + r_internal * r_surface * g)
@@ -105,7 +105,7 @@ def disk_system(freq,
     if spacings is None:
         spacings = 8e-3 * np.ones(num_disk + 1)
 
-    eps_1 = lossy_eps(freq, disk_epsilon, 0, SvenssonDjordjevic=False)  #9.
+    eps_1 = lossy_eps(freq, disk_epsilon, 0, SvenssonDjordjevic=False)
 
     eps_2_tr = lossy_eps(freq, 1.0, tand, SvenssonDjordjevic=False)
     axion_out = np.zeros(freq.shape) + 0 * 1j
@@ -199,17 +199,11 @@ def disk_system_phase_depths(d_air,
     l_air = d_air * wavel / (2 * np.pi)
     l_disk = d_disk * wavel / (2 * np.pi * np.sqrt(9.4))
 
-    Z_0 = 0.001
-    eps_1 = lossy_eps(freq, 9.4, 0, SvenssonDjordjevic=False)  #9.
-    l_1 = 0.001
-    # Traditional Loss Model
-    eps_2 = 1.
+    eps_1 = lossy_eps(freq, 9.4, 0, SvenssonDjordjevic=False)
     eps_2_tr = lossy_eps(freq, 1.0, tand, SvenssonDjordjevic=False)
-    #eps_2_sd = lossy_eps(freq, 1.0, tand, SvenssonDjordjevic=True)
-    l_2 = 0.
 
     # Air 0
-    #gamma = transform_surface(freq, 0., eps_i=1., eps_m=1., l=0, **kwargs)
+    # gamma = transform_surface(freq, 0., eps_i=1., eps_m=1., l=0, **kwargs)
 
     axion_out = np.zeros(d_air.shape) + 0 * 1j
     # Metal Disk
@@ -218,7 +212,7 @@ def disk_system_phase_depths(d_air,
                               axion_out=axion_out,
                               eps_i=1.,
                               eps_m=1e20,
-                              l=100e-3,
+                              l_air=100e-3,
                               **kwargs)
 
     if non_uniform_surfaceloss is None:
@@ -230,7 +224,7 @@ def disk_system_phase_depths(d_air,
                                   axion_out=axion_out,
                                   eps_i=1e20,
                                   eps_m=eps_2_tr,
-                                  l=l_air,
+                                  l_air=l_air,
                                   **kwargs)
 
         for i in np.arange(0, num_disk):
@@ -240,7 +234,7 @@ def disk_system_phase_depths(d_air,
                                       axion_out=axion_out,
                                       eps_i=eps_2_tr,
                                       eps_m=eps_1,
-                                      l=l_disk,
+                                      l_air=l_disk,
                                       **kwargs)
             # Air i+2
             gamma = transform_surface(freq,
@@ -248,7 +242,7 @@ def disk_system_phase_depths(d_air,
                                       axion_out=axion_out,
                                       eps_i=eps_1,
                                       eps_m=eps_2_tr,
-                                      l=l_air,
+                                      l_air=l_air,
                                       **kwargs)
     else:
         # Air 1
@@ -258,7 +252,7 @@ def disk_system_phase_depths(d_air,
                                   axion_out=axion_out,
                                   eps_i=1e20,
                                   eps_m=eps_2_tr,
-                                  l=8e-3,
+                                  l_air=8e-3,
                                   surfaceloss=non_uniform_surfaceloss[0],
                                   **kwargs)
 
@@ -269,7 +263,7 @@ def disk_system_phase_depths(d_air,
                                       axion_out=axion_out,
                                       eps_i=eps_2_tr,
                                       eps_m=eps_1,
-                                      l=l_disk,
+                                      l_air=l_disk,
                                       surfaceloss=non_uniform_surfaceloss[2 * i + 1],
                                       **kwargs)
             # Air i+2
@@ -278,7 +272,7 @@ def disk_system_phase_depths(d_air,
                                       axion_out=axion_out,
                                       eps_i=eps_1,
                                       eps_m=eps_2_tr,
-                                      l=l_air,
+                                      l_air=l_air,
                                       surfaceloss=non_uniform_surfaceloss[2 * i + 2],
                                       **kwargs)
 
