@@ -1,30 +1,34 @@
 import numpy as np
 
-c = 299792458.
+c = 299792458.0
 
 
-def transform_surface(freq,
-                      gamma,
-                      axion_out=None,
-                      eps_i=1.,
-                      eps_m=1.,
-                      l_air=0,
-                      surfaceloss=0,
-                      USE_RAY=True):
+def transform_surface(
+    freq,
+    gamma,
+    axion_out=None,
+    eps_i=1.0,
+    eps_m=1.0,
+    l_air=0,
+    surfaceloss=0,
+    USE_RAY=True,
+):
     if USE_RAY:
         # Ray Tracing
 
-        r_surface = (np.sqrt(eps_m) - np.sqrt(eps_i)) / (np.sqrt(eps_m) +
-                                                         np.sqrt(eps_i))
+        r_surface = (np.sqrt(eps_m) - np.sqrt(eps_i)) / (
+            np.sqrt(eps_m) + np.sqrt(eps_i)
+        )
         r_internal = gamma
 
         # Any transmission or reflection factor simply gets multiplied with
         # this loss factor
-        g = (1 - surfaceloss)
+        g = 1 - surfaceloss
 
         # The full relflectivity in front of the surface
-        gamma = g * r_surface + g**2 * (1 + r_surface) * (
-            1 - r_surface) * r_internal / (1 + r_internal * r_surface * g)
+        gamma = g * r_surface + g ** 2 * (1 + r_surface) * (
+            1 - r_surface
+        ) * r_internal / (1 + r_internal * r_surface * g)
 
         # Propagate the reflecitivity is the same as for the impedance trfo...
     else:
@@ -33,8 +37,8 @@ def transform_surface(freq,
         # Calculate impedance from new reflection coefficient
         z = (1 + gamma) / (1 - gamma)
 
-        Z_i = 1. / np.sqrt(eps_i)
-        Z_m = 1. / np.sqrt(eps_m)
+        Z_i = 1.0 / np.sqrt(eps_i)
+        Z_m = 1.0 / np.sqrt(eps_m)
 
         # Change basis to new medium
         z *= Z_i / Z_m
@@ -51,7 +55,7 @@ def transform_surface(freq,
     # Calculate axion contribution
     if axion_out is not None:
         if not USE_RAY:
-            raise TypeError('Cannot generate axions if w/o USE_RAY')
+            raise TypeError("Cannot generate axions if w/o USE_RAY")
 
         denominator = eps_i * np.sqrt(eps_m) + eps_m * np.sqrt(eps_i)
         ax_i = np.sqrt(eps_i) * (1 - eps_m / eps_i) / denominator
@@ -59,8 +63,9 @@ def transform_surface(freq,
 
         # Propagation of the internal new axion field inside and
         # through the surface
-        ax_i = (ax_i * g * r_internal *
-                (1 - r_surface) / (1 + g * r_internal * r_surface))
+        ax_i = (
+            ax_i * g * r_internal * (1 - r_surface) / (1 + g * r_internal * r_surface)
+        )
 
         # Propagation of the present axion_out through the surface
         axion_out *= g * (1 - r_surface) / (1 + r_internal * r_surface * g)
@@ -77,31 +82,37 @@ def transform_surface(freq,
 
 def lossy_eps(freq, eps, tand, SvenssonDjordjevic=False):
     if not SvenssonDjordjevic:
-        return (eps - 1j * eps * tand
-                )  # /np.sqrt(1+tand**2) <-- ADS is not deviding, apparently...
+        return (
+            eps - 1j * eps * tand
+        )  # /np.sqrt(1+tand**2) <-- ADS is not deviding, apparently...
     else:
         FreqForEpsrTanD = 1e9  # Hz
         HighFreqForTanD = 1e12  # Hz
         LowFreqForTanD = 1e3  # Hz
         # Svensson/Djordjevic Model
         # http://edadocs.software.keysight.com/display/ads2009/About+Dielectric+Loss+Models
-        L = np.log((HighFreqForTanD + 1j * FreqForEpsrTanD) /
-                   (LowFreqForTanD + 1j * FreqForEpsrTanD))
+        L = np.log(
+            (HighFreqForTanD + 1j * FreqForEpsrTanD)
+            / (LowFreqForTanD + 1j * FreqForEpsrTanD)
+        )
         a = -(eps * tand) / np.imag(L)
         Einf = eps - a * np.real(L)
-        return (Einf + a * np.log(
-            (HighFreqForTanD + 1j * freq) / (LowFreqForTanD + 1j * freq)))
+        return Einf + a * np.log(
+            (HighFreqForTanD + 1j * freq) / (LowFreqForTanD + 1j * freq)
+        )
 
 
-def disk_system(freq,
-                tand=0,
-                num_disk=5,
-                non_uniform_surfaceloss=None,
-                spacings=None,
-                mirror=True,
-                disk_thickness=0.001,
-                disk_epsilon=9,
-                **kwargs):
+def disk_system(
+    freq,
+    tand=0,
+    num_disk=5,
+    non_uniform_surfaceloss=None,
+    spacings=None,
+    mirror=True,
+    disk_thickness=0.001,
+    disk_epsilon=9,
+    **kwargs
+):
     if spacings is None:
         spacings = 8e-3 * np.ones(num_disk + 1)
 
@@ -112,13 +123,15 @@ def disk_system(freq,
 
     # Metal Disk
     if mirror:
-        gamma = transform_surface(freq,
-                                  0.0,
-                                  axion_out=axion_out,
-                                  eps_i=1.,
-                                  eps_m=1e20,
-                                  l_air=100e-3,
-                                  **kwargs)
+        gamma = transform_surface(
+            freq,
+            0.0,
+            axion_out=axion_out,
+            eps_i=1.0,
+            eps_m=1e20,
+            l_air=100e-3,
+            **kwargs
+        )
     else:
         gamma = 0
 
@@ -126,72 +139,81 @@ def disk_system(freq,
 
         # Air 1
         # 1. = Z_0 / Z_0 (at the beginning the normalized impedance is always 1)
-        gamma = transform_surface(freq,
-                                  gamma,
-                                  axion_out=axion_out,
-                                  eps_i=(1e20 if mirror else 1.),
-                                  eps_m=eps_2_tr,
-                                  l_air=spacings[0],
-                                  **kwargs)
+        gamma = transform_surface(
+            freq,
+            gamma,
+            axion_out=axion_out,
+            eps_i=(1e20 if mirror else 1.0),
+            eps_m=eps_2_tr,
+            l_air=spacings[0],
+            **kwargs
+        )
 
         for i in np.arange(0, num_disk):
             # Disk i+1
-            gamma = transform_surface(freq,
-                                      gamma,
-                                      axion_out=axion_out,
-                                      eps_i=eps_2_tr,
-                                      eps_m=eps_1,
-                                      l_air=disk_thickness,
-                                      **kwargs)
+            gamma = transform_surface(
+                freq,
+                gamma,
+                axion_out=axion_out,
+                eps_i=eps_2_tr,
+                eps_m=eps_1,
+                l_air=disk_thickness,
+                **kwargs
+            )
             # Air i+2
-            gamma = transform_surface(freq,
-                                      gamma,
-                                      axion_out=axion_out,
-                                      eps_i=eps_1,
-                                      eps_m=eps_2_tr,
-                                      l_air=spacings[i + 1],
-                                      **kwargs)
+            gamma = transform_surface(
+                freq,
+                gamma,
+                axion_out=axion_out,
+                eps_i=eps_1,
+                eps_m=eps_2_tr,
+                l_air=spacings[i + 1],
+                **kwargs
+            )
     else:
         # Air 1
         # 1. = Z_0 / Z_0 (at the beginning the normalized impedance is always 1)
-        gamma = transform_surface(freq,
-                                  gamma,
-                                  axion_out=axion_out,
-                                  eps_i=1e20,
-                                  eps_m=eps_2_tr,
-                                  l_air=spacings[0],
-                                  surfaceloss=non_uniform_surfaceloss[0],
-                                  **kwargs)
+        gamma = transform_surface(
+            freq,
+            gamma,
+            axion_out=axion_out,
+            eps_i=1e20,
+            eps_m=eps_2_tr,
+            l_air=spacings[0],
+            surfaceloss=non_uniform_surfaceloss[0],
+            **kwargs
+        )
 
         for i in np.arange(0, num_disk):
             # Disk i+1
-            gamma = transform_surface(freq,
-                                      gamma,
-                                      axion_out=axion_out,
-                                      eps_i=eps_2_tr,
-                                      eps_m=eps_1,
-                                      l_air=disk_thickness,
-                                      surfaceloss=non_uniform_surfaceloss[2 * i + 1],
-                                      **kwargs)
+            gamma = transform_surface(
+                freq,
+                gamma,
+                axion_out=axion_out,
+                eps_i=eps_2_tr,
+                eps_m=eps_1,
+                l_air=disk_thickness,
+                surfaceloss=non_uniform_surfaceloss[2 * i + 1],
+                **kwargs
+            )
             # Air i+2
-            gamma = transform_surface(freq,
-                                      gamma,
-                                      axion_out=axion_out,
-                                      eps_i=eps_1,
-                                      eps_m=eps_2_tr,
-                                      l_air=spacings[i + 1],
-                                      surfaceloss=non_uniform_surfaceloss[2 * i + 2],
-                                      **kwargs)
+            gamma = transform_surface(
+                freq,
+                gamma,
+                axion_out=axion_out,
+                eps_i=eps_1,
+                eps_m=eps_2_tr,
+                l_air=spacings[i + 1],
+                surfaceloss=non_uniform_surfaceloss[2 * i + 2],
+                **kwargs
+            )
 
     return gamma, axion_out
 
 
-def disk_system_phase_depths(d_air,
-                             d_disk=np.pi / 2,
-                             tand=0,
-                             num_disk=5,
-                             non_uniform_surfaceloss=None,
-                             **kwargs):
+def disk_system_phase_depths(
+    d_air, d_disk=np.pi / 2, tand=0, num_disk=5, non_uniform_surfaceloss=None, **kwargs
+):
 
     # The result should be independent of frequency now...
     freq = 20e9
@@ -207,93 +229,125 @@ def disk_system_phase_depths(d_air,
 
     axion_out = np.zeros(d_air.shape) + 0 * 1j
     # Metal Disk
-    gamma = transform_surface(freq,
-                              0.0,
-                              axion_out=axion_out,
-                              eps_i=1.,
-                              eps_m=1e20,
-                              l_air=100e-3,
-                              **kwargs)
+    gamma = transform_surface(
+        freq, 0.0, axion_out=axion_out, eps_i=1.0, eps_m=1e20, l_air=100e-3, **kwargs
+    )
 
     if non_uniform_surfaceloss is None:
 
         # Air 1
         # 1. = Z_0 / Z_0 (at the beginning the normalized impedance is always 1)
-        gamma = transform_surface(freq,
-                                  gamma,
-                                  axion_out=axion_out,
-                                  eps_i=1e20,
-                                  eps_m=eps_2_tr,
-                                  l_air=l_air,
-                                  **kwargs)
+        gamma = transform_surface(
+            freq,
+            gamma,
+            axion_out=axion_out,
+            eps_i=1e20,
+            eps_m=eps_2_tr,
+            l_air=l_air,
+            **kwargs
+        )
 
         for i in np.arange(0, num_disk):
             # Disk i+1
-            gamma = transform_surface(freq,
-                                      gamma,
-                                      axion_out=axion_out,
-                                      eps_i=eps_2_tr,
-                                      eps_m=eps_1,
-                                      l_air=l_disk,
-                                      **kwargs)
+            gamma = transform_surface(
+                freq,
+                gamma,
+                axion_out=axion_out,
+                eps_i=eps_2_tr,
+                eps_m=eps_1,
+                l_air=l_disk,
+                **kwargs
+            )
             # Air i+2
-            gamma = transform_surface(freq,
-                                      gamma,
-                                      axion_out=axion_out,
-                                      eps_i=eps_1,
-                                      eps_m=eps_2_tr,
-                                      l_air=l_air,
-                                      **kwargs)
+            gamma = transform_surface(
+                freq,
+                gamma,
+                axion_out=axion_out,
+                eps_i=eps_1,
+                eps_m=eps_2_tr,
+                l_air=l_air,
+                **kwargs
+            )
     else:
         # Air 1
         # 1. = Z_0 / Z_0 (at the beginning the normalized impedance is always 1)
-        gamma = transform_surface(freq,
-                                  gamma,
-                                  axion_out=axion_out,
-                                  eps_i=1e20,
-                                  eps_m=eps_2_tr,
-                                  l_air=8e-3,
-                                  surfaceloss=non_uniform_surfaceloss[0],
-                                  **kwargs)
+        gamma = transform_surface(
+            freq,
+            gamma,
+            axion_out=axion_out,
+            eps_i=1e20,
+            eps_m=eps_2_tr,
+            l_air=8e-3,
+            surfaceloss=non_uniform_surfaceloss[0],
+            **kwargs
+        )
 
         for i in np.arange(0, num_disk):
             # Disk i+1
-            gamma = transform_surface(freq,
-                                      gamma,
-                                      axion_out=axion_out,
-                                      eps_i=eps_2_tr,
-                                      eps_m=eps_1,
-                                      l_air=l_disk,
-                                      surfaceloss=non_uniform_surfaceloss[2 * i + 1],
-                                      **kwargs)
+            gamma = transform_surface(
+                freq,
+                gamma,
+                axion_out=axion_out,
+                eps_i=eps_2_tr,
+                eps_m=eps_1,
+                l_air=l_disk,
+                surfaceloss=non_uniform_surfaceloss[2 * i + 1],
+                **kwargs
+            )
             # Air i+2
-            gamma = transform_surface(freq,
-                                      gamma,
-                                      axion_out=axion_out,
-                                      eps_i=eps_1,
-                                      eps_m=eps_2_tr,
-                                      l_air=l_air,
-                                      surfaceloss=non_uniform_surfaceloss[2 * i + 2],
-                                      **kwargs)
+            gamma = transform_surface(
+                freq,
+                gamma,
+                axion_out=axion_out,
+                eps_i=eps_1,
+                eps_m=eps_2_tr,
+                l_air=l_air,
+                surfaceloss=non_uniform_surfaceloss[2 * i + 2],
+                **kwargs
+            )
 
     return gamma, axion_out
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     frequencies = np.linspace(22, 22.05, 10) * 1e9
 
-    spacings = np.array([
-        1.00334, 6.94754, 7.1766, 7.22788, 7.19717, 7.23776, 7.07746, 7.57173, 7.08019,
-        7.24657, 7.21708, 7.18317, 7.13025, 7.2198, 7.45585, 7.39873, 7.15403, 7.14252,
-        6.83105, 7.42282
-    ]) * 1e-3
+    spacings = (
+        np.array(
+            [
+                1.00334,
+                6.94754,
+                7.1766,
+                7.22788,
+                7.19717,
+                7.23776,
+                7.07746,
+                7.57173,
+                7.08019,
+                7.24657,
+                7.21708,
+                7.18317,
+                7.13025,
+                7.2198,
+                7.45585,
+                7.39873,
+                7.15403,
+                7.14252,
+                6.83105,
+                7.42282,
+            ]
+        )
+        * 1e-3
+    )
 
-    ref, ax = disk_system(frequencies,
-                          tand=0,
-                          num_disk=19,
-                          disk_epsilon=24,
-                          mirror=True,
-                          spacings=spacings)
+    ref, ax = disk_system(
+        frequencies,
+        tand=0,
+        num_disk=19,
+        disk_epsilon=24,
+        mirror=True,
+        spacings=spacings,
+    )
 
     boost = abs(ax * ax)
     print(boost)
