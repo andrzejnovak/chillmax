@@ -5,4 +5,5 @@ __all__ = [
     "Analytical1D",
     "Analytical12D",
     "sim",
+    "sampling",
 ]
