@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os.path
-from setuptools import setup
+from setuptools import find_packages, setup
 from setuptools.command.install import install
 
 about = {}
@@ -26,6 +26,7 @@ setup(
     name="chillmax",
     version=about["__version__"],
     scripts=[],
+    packages=find_packages(),
     include_package_data=True,
     description="",
     long_description=open("README.md", "rb").read().decode("utf8", "ignore"),
