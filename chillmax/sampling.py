@@ -6,7 +6,7 @@ def get_spans(cfg, freq=(21, 24), plot=False, size_parameter=0.5):
     if len(freq) != 2:
         freqs = freq  # passed linspace i guess
     else:
-        freqs = np.linspace(freq[0], freq[1], points*10)
+        freqs = np.linspace(freq[0], freq[1], 2000)
 
     boost = cm.sim.boost(freqs * 1e9, spacings=cfg)
 
@@ -103,6 +103,6 @@ def find_split_sampling(spans, cfgs):
     """
     pts = []
     for i, span in enumerate(spans):
-        pts.append(np.linspace(*span, points))
+        pts.append(np.linspace(*span, 200))
     cfgs = np.tile(cfgs, (len(pts), 1))
     return np.array(pts), cfgs
