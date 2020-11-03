@@ -2,16 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import chillmax as cm
 
-def get_spans(cfg, freq=(21, 24), plot=False):
-    import scipy
-    from scipy.signal import chirp, find_peaks, peak_widths
-
+def get_spans(cfg, freq=(21, 24), plot=False, points=600, size_parameter=0.5):
     if len(freq) != 2:
         freqs = freq  # passed linspace i guess
     else:
-        freqs = np.linspace(freq[0], freq[1], 2000)
+        freqs = np.linspace(freq[0], freq[1], points*10)
 
-    boost = cm.sim.boost(freqs * 1e9, spacings=cfg)
+    boost = cm.sim.boost(freqs * 1e9, spacings=cfg, points=600)
 
     if plot:
         fig, axs = plt.subplots(figsize=(7, 5))
@@ -20,23 +17,26 @@ def get_spans(cfg, freq=(21, 24), plot=False):
     peaks, _ = find_peaks(boost, prominence=np.max(boost) * 0.1)
     results_full = peak_widths(boost, peaks, rel_height=0.98)
 
+    if peaks.size==0:
+        return True
+
     if plot:
         axs.plot(freqs[peaks], boost[peaks], "x", label="Peaks")
 
-    def find(peak, freqs):
+    def find(peak, freqs, size_parameter):
         rmin, rmax = np.floor(peak[0]).astype(int), np.ceil(peak[1]).astype(int)
         fmin, fmax = freqs[rmin], freqs[rmax]
         scale = 0.1
         size = fmax - fmin
-        extra = max(0.005, size * 0.08)
+        extra = max(0.005, size * size_parameter)
         return fmin - extra, fmax + extra
 
     peaks = np.array(results_full[2:]).T
     spans = []
     for i, peak in enumerate(peaks):
         if plot:
-            axs.axvspan(*find(peak, freqs), alpha=0.5, label=f'Peak {i}', color=f'C{i}')
-        spans.append(find(peak, freqs))
+            axs.axvspan(*find(peak, freqs, size_parameter), alpha=0.5, label=f'Peak {i}', color=f'C{i}')
+        spans.append(find(peak, freqs, size_parameter))
 
     np.min(np.array(spans))
 
@@ -87,7 +87,7 @@ def find_sampling(spans, bounds=(21, 24)):
     return np.sort(np.hstack(pts), kind='heapsort')
 
 
-def find_split_sampling(spans, cfgs):
+def find_split_sampling(spans, cfgs, points=600):
     """Find sampling for each peak span passed.
 
     Parameters
@@ -103,7 +103,6 @@ def find_split_sampling(spans, cfgs):
     """
     pts = []
     for i, span in enumerate(spans):
-        pts.append(np.linspace(*span, 200))
+        pts.append(np.linspace(*span, points))
     cfgs = np.tile(cfgs, (len(pts), 1))
     return np.array(pts), cfgs
-
