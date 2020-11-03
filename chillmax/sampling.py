@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import chillmax as cm
+import scipy
+from scipy.signal import chirp, find_peaks, peak_widths
 
 def get_spans(cfg, freq=(21, 24), plot=False, size_parameter=0.5):
     if len(freq) != 2:
