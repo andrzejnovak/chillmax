@@ -2,13 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import chillmax as cm
 
-def get_spans(cfg, freq=(21, 24), plot=False, points=600, size_parameter=0.5):
+def get_spans(cfg, freq=(21, 24), plot=False, size_parameter=0.5):
     if len(freq) != 2:
         freqs = freq  # passed linspace i guess
     else:
         freqs = np.linspace(freq[0], freq[1], points*10)
 
-    boost = cm.sim.boost(freqs * 1e9, spacings=cfg, points=600)
+    boost = cm.sim.boost(freqs * 1e9, spacings=cfg)
 
     if plot:
         fig, axs = plt.subplots(figsize=(7, 5))
@@ -87,7 +87,7 @@ def find_sampling(spans, bounds=(21, 24)):
     return np.sort(np.hstack(pts), kind='heapsort')
 
 
-def find_split_sampling(spans, cfgs, points=600):
+def find_split_sampling(spans, cfgs):
     """Find sampling for each peak span passed.
 
     Parameters
