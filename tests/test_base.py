@@ -63,5 +63,3 @@ def test_boost():
 
 def test_boost2():
     boost()
-
-    boost(22e9)
