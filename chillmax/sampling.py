@@ -20,7 +20,7 @@ def get_spans(cfg, freq=(21, 24), plot=False, size_parameter=0.5):
     results_full = peak_widths(boost, peaks, rel_height=0.98)
 
     if peaks.size==0:
-        return True
+        return 0
 
     if plot:
         axs.plot(freqs[peaks], boost[peaks], "x", label="Peaks")
