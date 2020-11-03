@@ -1,11 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import chillmax as cm
+import scipy
+from scipy.signal import chirp, find_peaks, peak_widths
 
-def get_spans(cfg, freq=(21, 24), plot=False):
-    import scipy
-    from scipy.signal import chirp, find_peaks, peak_widths
-
+def get_spans(cfg, freq=(21, 24), plot=False, size_parameter=0.5):
     if len(freq) != 2:
         freqs = freq  # passed linspace i guess
     else:
@@ -20,23 +19,26 @@ def get_spans(cfg, freq=(21, 24), plot=False):
     peaks, _ = find_peaks(boost, prominence=np.max(boost) * 0.1)
     results_full = peak_widths(boost, peaks, rel_height=0.98)
 
+    if peaks.size==0:
+        return True
+
     if plot:
         axs.plot(freqs[peaks], boost[peaks], "x", label="Peaks")
 
-    def find(peak, freqs):
+    def find(peak, freqs, size_parameter):
         rmin, rmax = np.floor(peak[0]).astype(int), np.ceil(peak[1]).astype(int)
         fmin, fmax = freqs[rmin], freqs[rmax]
         scale = 0.1
         size = fmax - fmin
-        extra = max(0.005, size * 0.08)
+        extra = max(0.005, size * size_parameter)
         return fmin - extra, fmax + extra
 
     peaks = np.array(results_full[2:]).T
     spans = []
     for i, peak in enumerate(peaks):
         if plot:
-            axs.axvspan(*find(peak, freqs), alpha=0.5, label=f'Peak {i}', color=f'C{i}')
-        spans.append(find(peak, freqs))
+            axs.axvspan(*find(peak, freqs, size_parameter), alpha=0.5, label=f'Peak {i}', color=f'C{i}')
+        spans.append(find(peak, freqs, size_parameter))
 
     np.min(np.array(spans))
 
@@ -106,4 +108,3 @@ def find_split_sampling(spans, cfgs):
         pts.append(np.linspace(*span, 200))
     cfgs = np.tile(cfgs, (len(pts), 1))
     return np.array(pts), cfgs
-
